@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学习通作业考试管理助手</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.9.1/dist/index.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif; background: #f0f2f5; color: #333; }
+
+    /* 登录页 */
+    .login-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .login-card { width: 420px; padding: 40px; background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .login-card h2 { text-align: center; margin-bottom: 8px; font-size: 24px; color: #333; }
+    .login-card .subtitle { text-align: center; color: #999; margin-bottom: 30px; font-size: 14px; }
+    .login-card .el-button { width: 100%; height: 44px; font-size: 16px; border-radius: 8px; }
+    .login-card .el-input__wrapper { border-radius: 8px; }
+    .login-error { color: #f56c6c; font-size: 13px; margin-top: 8px; text-align: center; }
+    .login-hint { text-align: center; color: #999; font-size: 12px; margin-top: 16px; }
+
+    /* 主布局 */
+    .app-layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: #fff; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid #f0f0f0; }
+    .sidebar-header h2 { font-size: 16px; color: #409eff; display: flex; align-items: center; gap: 8px; }
+    .sidebar-header h2 .icon { font-size: 22px; }
+    .sidebar-header p { font-size: 11px; color: #999; margin-top: 4px; }
+    .sidebar-nav { flex: 1; padding: 12px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; transition: all 0.2s; font-size: 14px; color: #666; }
+    .nav-item:hover { background: #f5f7fa; color: #409eff; }
+    .nav-item.active { background: #ecf5ff; color: #409eff; font-weight: 500; }
+    .nav-item .badge { margin-left: auto; background: #f56c6c; color: #fff; font-size: 11px; padding: 1px 8px; border-radius: 10px; min-width: 20px; text-align: center; }
+    .sidebar-footer { padding: 16px 8px; border-top: 1px solid #f0f0f0; }
+    .user-info { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .user-info:hover { background: #f5f7fa; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: bold; }
+    .user-name { font-size: 14px; color: #333; }
+    .user-role { font-size: 11px; color: #999; }
+
+    /* 主内容 */
+    .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; max-height: 100vh; }
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 22px; font-weight: 600; }
+    .page-header p { color: #999; font-size: 13px; margin-top: 4px; }
+
+    /* 统计卡片 */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .stat-card .stat-label { font-size: 13px; color: #999; margin-bottom: 8px; }
+    .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #333; }
+    .stat-card .stat-sub { font-size: 12px; color: #999; margin-top: 4px; }
+    .stat-card.green .stat-value { color: #67c23a; }
+    .stat-card.orange .stat-value { color: #e6a23c; }
+    .stat-card.red .stat-value { color: #f56c6c; }
+    .stat-card.blue .stat-value { color: #409eff; }
+
+    /* 内容卡片 */
+    .content-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center; }
+    .card-header h3 { font-size: 15px; font-weight: 600; }
+    .card-body { padding: 16px 20px; }
+
+    /* 作业/考试卡片 */
+    .item-card { padding: 16px 20px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.2s; }
+    .item-card:last-child { border-bottom: none; }
+    .item-card:hover { background: #fafafa; }
+    .item-card h4 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .item-card .meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #999; }
+    .item-card .meta span { display: flex; align-items: center; gap: 4px; }
+    .status-tag { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; }
+    .status-pending { background: #ecf5ff; color: #409eff; }
+    .status-in_progress { background: #fdf6ec; color: #e6a23c; }
+    .status-completed { background: #f0f9eb; color: #67c23a; }
+    .status-overdue { background: #fef0f0; color: #f56c6c; }
+    .status-peer_review { background: #fdf6ec; color: #e6a23c; }
+    .status-not_submitted { background: #fdf6ec; color: #e6a23c; }
+    .status-submitted { background: #f0f9eb; color: #67c23a; }
+    .status-graded { background: #f0f9eb; color: #67c23a; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #ccc; }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* 日历表格 */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #eee; border-radius: 8px; overflow: hidden; }
+    .calendar-header { background: #f7f7f7; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; color: #666; }
+    .calendar-day { background: #fff; min-height: 100px; padding: 6px; }
+    .calendar-day .day-number { font-size: 13px; color: #333; margin-bottom: 4px; }
+    .calendar-day.today .day-number { background: #409eff; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .calendar-day.other-month .day-number { color: #ccc; }
+    .calendar-event { font-size: 11px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .calendar-event { font-size: 11px; padding: 2px 4px; border-radius: 3px; margin-bottom: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid transparent; }
+    .calendar-event.homework { background: #ecf5ff; color: #409eff; border-left-color: #409eff; }
+    .calendar-event.homework.overdue { background: #fef0f0; color: #f56c6c; border-left-color: #f56c6c; }
+    .calendar-event.homework.completed { background: #f0f9eb; color: #67c23a; border-left-color: #67c23a; }
+    .calendar-event.homework.peer_review { background: #fdf6ec; color: #e6a23c; border-left-color: #e6a23c; }
+    .calendar-event.exam { background: #fdf6ec; color: #e6a23c; border-left-color: #e6a23c; }
+    .calendar-event.exam.overdue { background: #fef0f0; color: #f56c6c; border-left-color: #f56c6c; }
+    .calendar-event.exam.completed { background: #f0f9eb; color: #67c23a; border-left-color: #67c23a; }
+    .calendar-legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+    .calendar-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+    .calendar-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    /* 提醒设置 */
+    .settings-group { margin-bottom: 20px; }
+    .settings-group h4 { font-size: 14px; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+    .settings-row label { font-size: 14px; color: #666; }
+    .save-settings-bar { background: #fff; padding: 16px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px; position: sticky; bottom: 0; }
+
+    /* 个人信息 */
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 32px; font-weight: bold; margin: 0 auto 16px; }
+    .profile-form { max-width: 400px; margin: 0 auto; }
+
+    /* 弹窗 */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #fff; border-radius: 12px; width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 18px; font-weight: 600; }
+    .modal-close { cursor: pointer; font-size: 20px; color: #999; }
+    .modal-body { padding: 24px; }
+    .detail-row { display: flex; margin-bottom: 12px; }
+    .detail-row .label { width: 100px; color: #999; font-size: 13px; flex-shrink: 0; }
+    .detail-row .value { flex: 1; font-size: 14px; color: #333; }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast { background: #fff; border-radius: 8px; padding: 12px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; animation: slideIn 0.3s ease; min-width: 280px; }
+    .toast.success { border-left: 4px solid #67c23a; }
+    .toast.error { border-left: 4px solid #f56c6c; }
+    .toast.info { border-left: 4px solid #409eff; }
+    .toast.warning { border-left: 4px solid #e6a23c; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* 加载动画 */
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 1001; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #e8e8e8; border-top-color: #409eff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 标签筛选 */
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-tab { padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; background: #f5f7fa; color: #666; border: none; }
+    .filter-tab.active { background: #409eff; color: #fff; }
+    .filter-tab:hover:not(.active) { background: #ecf5ff; color: #409eff; }
+
+    /* 导出下拉 */
+    .export-menu { position: absolute; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden; z-index: 100; }
+    .export-menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .export-menu-item:hover { background: #f5f7fa; }
+
+    /* 进度 */
+    .progress-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin: 12px 0; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 全局加载 -->
+    <div v-if="loading" class="loading-overlay"><div class="spinner"></div></div>
+
+    <!-- Toast容器 -->
+    <div class="toast-container">
+      <div v-for="(toast, idx) in toasts" :key="idx" :class="['toast', toast.type]">
+        <span v-if="toast.type === 'success'">&#10003;</span>
+        <span v-else-if="toast.type === 'error'">&#10007;</span>
+        <span v-else-if="toast.type === 'warning'">&#9888;</span>
+        <span v-else>&#8505;</span>
+        {{ toast.message }}
+      </div>
+    </div>
+
+    <!-- 登录页 -->
+    <div v-if="!loggedIn" class="login-page">
+      <div class="login-card">
+        <h2>学习通作业考试管理助手</h2>
+        <p class="subtitle">统一管理你的学习任务与考试安排</p>
+        <el-form :model="loginForm" @submit.prevent="handleLogin">
+          <el-form-item>
+            <el-input v-model="loginForm.username" placeholder="用户名" prefix-icon="User" size="large"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-input v-model="loginForm.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" show-password></el-input>
+          </el-form-item>
+          <el-button type="primary" @click="handleLogin" :loading="loginLoading">登 录</el-button>
+          <div v-if="loginError" class="login-error">{{ loginError }}</div>
+        </el-form>
+        <p class="login-hint">本地账号：local / 123456（或登录学习通同步真实数据）</p>
+      </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div v-else class="app-layout">
+      <!-- 侧边栏 -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2><span class="icon">&#128218;</span> 学习通助手</h2>
+          <p>作业 | 考试 | 提醒</p>
+        </div>
+        <div class="sidebar-nav">
+          <div v-for="item in navItems" :key="item.key" class="nav-item" :class="{ active: currentPage === item.key }" @click="navigateTo(item.key)">
+            <span v-html="item.icon"></span>
+            <span>{{ item.label }}</span>
+            <span v-if="item.badge && item.badge > 0" class="badge">{{ item.badge }}</span>
+          </div>
+        </div>
+        <div class="sidebar-footer">
+          <div class="user-info" @click="navigateTo('profile')">
+            <div class="user-avatar">{{ userInitial }}</div>
+            <div>
+              <div class="user-name">{{ currentUserName }}</div>
+              <div class="user-role">学生</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主内容 -->
+      <div class="main-content">
+        <!-- 首页 -->
+        <div v-if="currentPage === 'home'">
+          <div class="page-header">
+            <h1>概览</h1>
+            <p>欢迎回来，{{ currentUserName }}！这是你的学习任务总览</p>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card blue"><div class="stat-label">待完成作业</div><div class="stat-value">{{ stats.pendingHomework }}</div><div class="stat-sub">共 {{ stats.totalHomework }} 项</div></div>
+            <div class="stat-card orange"><div class="stat-label">待参加考试</div><div class="stat-value">{{ stats.pendingExam }}</div><div class="stat-sub">共 {{ stats.totalExam }} 场</div></div>
+            <div class="stat-card red"><div class="stat-label">已逾期作业</div><div class="stat-value">{{ stats.overdueHomework }}</div><div class="stat-sub">需要立即处理</div></div>
+            <div class="stat-card green"><div class="stat-label">本周任务</div><div class="stat-value">{{ stats.thisWeekTasks }}</div><div class="stat-sub">7天内待完成</div></div>
+          </div>
+          <div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="content-card">
+              <div class="card-header"><h3>近期作业</h3><el-button type="primary" size="small" plain @click="navigateTo('homework')">查看全部</el-button></div>
+              <div class="card-body" style="padding:0;">
+                <div v-for="hw in recentHomeworks" :key="hw.id" class="item-card" @click="showHomeworkDetail(hw)">
+                  <h4>{{ hw.homework_name }}</h4>
+                  <div class="meta">
+                    <span>{{ hw.course_name }}</span>
+                    <span>截止：{{ formatDate(hw.deadline) }}</span>
+                    <span :class="'status-tag status-' + hw.status">{{ statusMap[hw.status] || hw.status }}</span>
+                  </div>
+                </div>
+                <div v-if="recentHomeworks.length === 0" class="empty-state"><div class="empty-icon">&#127881;</div><p>暂无近期作业</p></div>
+              </div>
+            </div>
+            <div class="content-card">
+              <div class="card-header"><h3>即将到来的考试</h3><el-button type="primary" size="small" plain @click="navigateTo('exam')">查看全部</el-button></div>
+              <div class="card-body" style="padding:0;">
+                <div v-for="exam in upcomingExams" :key="exam.id" class="item-card" @click="showExamDetail(exam)">
+                  <h4>{{ exam.exam_name }}</h4>
+                  <div class="meta">
+                    <span>{{ exam.course_name }}</span>
+                    <span>时间：{{ formatDateTime(exam.start_time) }}</span>
+                    <span v-if="exam.location">{{ exam.location }}</span>
+                    <span :class="'status-tag status-' + exam.status">{{ statusMap[exam.status] || exam.status }}</span>
+                  </div>
+                </div>
+                <div v-if="upcomingExams.length === 0" class="empty-state"><div class="empty-icon">&#127881;</div><p>暂无即将到来的考试</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 作业页面 -->
+        <div v-if="currentPage === 'homework'">
+          <div class="page-header">
+            <h1>作业管理</h1>
+            <p>查看和管理所有课程作业</p>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab" :class="{ active: homeworkFilter === 'all' }" @click="homeworkFilter = 'all'">全部 ({{ allHomeworks.length }})</button>
+            <button class="filter-tab" :class="{ active: homeworkFilter === 'pending' }" @click="homeworkFilter = 'pending'">待完成 ({{ filteredHomeworksByStatus('pending').length }})</button>
+            <button class="filter-tab" :class="{ active: homeworkFilter === 'in_progress' }" @click="homeworkFilter = 'in_progress'">进行中 ({{ filteredHomeworksByStatus('in_progress').length }})</button>
+            <button class="filter-tab" :class="{ active: homeworkFilter === 'overdue' }" @click="homeworkFilter = 'overdue'">已逾期 ({{ filteredHomeworksByStatus('overdue').length }})</button>
+            <button class="filter-tab" :class="{ active: homeworkFilter === 'peer_review' }" @click="homeworkFilter = 'peer_review'">待互评 ({{ filteredHomeworksByStatus('peer_review').length }})</button>
+            <button class="filter-tab" :class="{ active: homeworkFilter === 'completed' }" @click="homeworkFilter = 'completed'">已完成 ({{ filteredHomeworksByStatus('completed').length }})</button>
+          </div>
+          <div class="content-card">
+            <div class="card-body" style="padding:0;">
+              <div v-for="hw in filteredHomeworks" :key="hw.id" class="item-card" @click="showHomeworkDetail(hw)">
+                <h4>{{ hw.homework_name }}</h4>
+                <div class="meta">
+                  <span>{{ hw.course_name }}</span>
+                  <span>截止：{{ formatDate(hw.deadline) }}</span>
+                  <span v-if="hw.score">得分：{{ hw.score }}</span>
+                  <span :class="'status-tag status-' + hw.status">{{ statusMap[hw.status] || hw.status }}</span>
+                  <span :class="'status-tag status-' + hw.submit_status">{{ submitStatusMap[hw.submit_status] || hw.submit_status }}</span>
+                </div>
+              </div>
+              <div v-if="filteredHomeworks.length === 0" class="empty-state"><div class="empty-icon">&#128203;</div><p>暂无匹配的作业</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 考试页面 -->
+        <div v-if="currentPage === 'exam'">
+          <div class="page-header">
+            <h1>考试管理</h1>
+            <p>查看和管理所有考试安排</p>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab" :class="{ active: examFilter === 'all' }" @click="examFilter = 'all'">全部 ({{ allExams.length }})</button>
+            <button class="filter-tab" :class="{ active: examFilter === 'pending' }" @click="examFilter = 'pending'">待参加 ({{ filteredExamsByStatus('pending').length }})</button>
+            <button class="filter-tab" :class="{ active: examFilter === 'overdue' }" @click="examFilter = 'overdue'">已逾期 ({{ filteredExamsByStatus('overdue').length }})</button>
+            <button class="filter-tab" :class="{ active: examFilter === 'completed' }" @click="examFilter = 'completed'">已完成 ({{ filteredExamsByStatus('completed').length }})</button>
+          </div>
+          <div class="content-card">
+            <div class="card-body" style="padding:0;">
+              <div v-for="exam in filteredExams" :key="exam.id" class="item-card" @click="showExamDetail(exam)">
+                <h4>{{ exam.exam_name }}</h4>
+                <div class="meta">
+                  <span>{{ exam.course_name }}</span>
+                  <span>时间：{{ formatDateTime(exam.start_time) }}</span>
+                  <span v-if="exam.duration">{{ exam.duration }}分钟</span>
+                  <span v-if="exam.location">{{ exam.location }}</span>
+                  <span :class="'status-tag status-' + exam.status">{{ statusMap[exam.status] || exam.status }}</span>
+                </div>
+              </div>
+              <div v-if="filteredExams.length === 0" class="empty-state"><div class="empty-icon">&#128218;</div><p>暂无匹配的考试</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 日历页面 -->
+        <div v-if="currentPage === 'calendar'">
+          <div class="page-header">
+            <h1>日历视图</h1>
+            <p>以日历形式查看所有作业和考试安排</p>
+          </div>
+          <div class="content-card">
+            <div class="card-header">
+              <h3>{{ calendarTitle }}</h3>
+              <div>
+                <el-button size="small" @click="calendarMonth -= 1">&#8592; 上月</el-button>
+                <el-button size="small" @click="calendarToday">今天</el-button>
+                <el-button size="small" @click="calendarMonth += 1">下月 &#8594;</el-button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="calendar-grid">
+                <div v-for="day in ['日','一','二','三','四','五','六']" :key="day" class="calendar-header">{{ day }}</div>
+                <div v-for="(day, idx) in calendarDays" :key="idx" :class="['calendar-day', { today: day.isToday, 'other-month': !day.isCurrentMonth }]">
+                  <div class="day-number">{{ day.day }}</div>
+                  <div v-for="evt in day.events" :key="evt.id" :class="['calendar-event', evt.type, evt.status]" @click="evt.type === 'homework' ? showHomeworkDetail(evt) : showExamDetail(evt)" :title="evt.fullTitle">
+                    {{ evt.title }}
+                  </div>
+                </div>
+              </div>
+              <div class="calendar-legend">
+                <div class="calendar-legend-item"><div class="calendar-legend-dot" style="background:#409eff;"></div>待完成</div>
+                <div class="calendar-legend-item"><div class="calendar-legend-dot" style="background:#f56c6c;"></div>已逾期</div>
+                <div class="calendar-legend-item"><div class="calendar-legend-dot" style="background:#67c23a;"></div>已完成</div>
+                <div class="calendar-legend-item"><div class="calendar-legend-dot" style="background:#e6a23c;"></div>待互评</div>
+                <div class="calendar-legend-item"><div class="calendar-legend-dot" style="background:#ecf5ff; border:1px solid #409eff;"></div>作业</div>
+                <div class="calendar-legend-item"><div class="calendar-legend-dot" style="background:#fdf6ec; border:1px solid #e6a23c;"></div>考试</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提醒页面 -->
+        <div v-if="currentPage === 'reminder'">
+          <div class="page-header">
+            <h1>提醒设置</h1>
+            <p>管理作业和考试的提醒配置</p>
+          </div>
+          <div class="content-card">
+            <div class="card-header"><h3>提醒配置</h3></div>
+            <div class="card-body">
+              <div class="settings-group">
+                <h4>作业提醒</h4>
+                <div class="settings-row">
+                  <label>提前 1 天提醒</label>
+                  <el-switch v-model="settings.remindHomework1Day"></el-switch>
+                </div>
+                <div class="settings-row">
+                  <label>提前 6 小时提醒</label>
+                  <el-switch v-model="settings.remindHomework6Hour"></el-switch>
+                </div>
+                <div class="settings-row">
+                  <label>提前 1 小时提醒</label>
+                  <el-switch v-model="settings.remindHomework1Hour"></el-switch>
+                </div>
+              </div>
+              <div class="settings-group">
+                <h4>考试提醒</h4>
+                <div class="settings-row">
+                  <label>提前 1 天提醒</label>
+                  <el-switch v-model="settings.remindExam1Day"></el-switch>
+                </div>
+                <div class="settings-row">
+                  <label>提前 3 小时提醒</label>
+                  <el-switch v-model="settings.remindExam3Hour"></el-switch>
+                </div>
+                <div class="settings-row">
+                  <label>提前 1 小时提醒</label>
+                  <el-switch v-model="settings.remindExam1Hour"></el-switch>
+                </div>
+              </div>
+              <div class="settings-group">
+                <h4>其他设置</h4>
+                <div class="settings-row">
+                  <label>同步频率</label>
+                  <el-select v-model="settings.sync_frequency" size="small" style="width:130px;">
+                    <el-option label="手动同步" value="manual"></el-option>
+                    <el-option label="每小时" value="hourly"></el-option>
+                    <el-option label="每天" value="daily"></el-option>
+                  </el-select>
+                </div>
+                <div class="settings-row">
+                  <label>主题</label>
+                  <el-select v-model="settings.theme" size="small" style="width:130px;">
+                    <el-option label="浅色" value="light"></el-option>
+                    <el-option label="深色" value="dark"></el-option>
+                  </el-select>
+                </div>
+                <div class="settings-row">
+                  <label>提醒方式</label>
+                  <el-checkbox-group v-model="settings.reminder_methods" size="small">
+                    <el-checkbox label="app">应用内</el-checkbox>
+                    <el-checkbox label="email" disabled>邮件</el-checkbox>
+                  </el-checkbox-group>
+                </div>
+              </div>
+            </div>
+            <div class="save-settings-bar">
+              <el-button type="primary" @click="saveSettings" :loading="savingSettings">保存设置</el-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 个人中心 -->
+        <div v-if="currentPage === 'profile'">
+          <div class="page-header">
+            <h1>个人中心</h1>
+            <p>管理个人信息和应用设置</p>
+          </div>
+          <div class="content-card">
+            <div class="card-header"><h3>个人信息</h3></div>
+            <div class="card-body">
+              <div class="profile-avatar">{{ userInitial }}</div>
+              <div class="profile-form">
+                <el-form :model="profileForm" label-width="80px">
+                  <el-form-item label="用户名">
+                    <el-input v-model="profileForm.username" disabled></el-input>
+                  </el-form-item>
+                  <el-form-item label="姓名">
+                    <el-input v-model="profileForm.name"></el-input>
+                  </el-form-item>
+                  <el-form-item label="邮箱">
+                    <el-input v-model="profileForm.email"></el-input>
+                  </el-form-item>
+                  <el-form-item label="手机">
+                    <el-input v-model="profileForm.phone"></el-input>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button type="primary" @click="updateProfile" :loading="savingProfile">保存修改</el-button>
+                  </el-form-item>
+                </el-form>
+              </div>
+            </div>
+          </div>
+          <div class="content-card">
+            <div class="card-header"><h3>学习通账号</h3></div>
+            <div class="card-body">
+              <div class="settings-row">
+                <div>
+                  <label style="font-size:14px;color:#333;">学习通连接状态</label>
+                  <p style="font-size:12px;color:#999;margin-top:2px;">
+                    <span v-if="chaoxingStatus.loggedIn" style="color:#67c23a;">&#10003; 已连接</span>
+                    <span v-else style="color:#f56c6c;">&#10007; 未连接</span>
+                    <span v-if="chaoxingStatus.lastSync" style="margin-left:8px;">上次同步：{{ formatDateTime(chaoxingStatus.lastSync) }}</span>
+                  </p>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <el-button v-if="!chaoxingStatus.loggedIn" type="primary" size="small" @click="openChaoxingLogin">登录学习通</el-button>
+                  <el-button v-else type="danger" plain size="small" @click="chaoxingLogout">断开连接</el-button>
+                </div>
+              </div>
+              <div class="settings-row">
+                <label>同步学习通数据</label>
+                <el-button type="primary" plain size="small" @click="syncData" :loading="syncing" :disabled="!chaoxingStatus.loggedIn">同步数据</el-button>
+              </div>
+              <div v-if="syncMessage" style="margin-top:8px;padding:10px;border-radius:6px;font-size:13px;" :style="{ background: syncSuccess ? '#f0f9eb' : '#fef0f0', color: syncSuccess ? '#67c23a' : '#f56c6c' }">
+                {{ syncMessage }}
+              </div>
+            </div>
+          </div>
+          <div class="content-card">
+            <div class="card-header"><h3>数据管理</h3></div>
+            <div class="card-body">
+              <div class="settings-row">
+                <label>导出数据</label>
+                <div style="position:relative;">
+                  <el-button type="success" plain size="small" @click="showExportMenu = !showExportMenu">导出</el-button>
+                  <div v-if="showExportMenu" class="export-menu">
+                    <div class="export-menu-item" @click="exportData('json')">JSON 格式</div>
+                    <div class="export-menu-item" @click="exportData('text')">文本预览</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;padding:20px;">
+            <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 作业详情弹窗 -->
+    <div v-if="detailHomework" class="modal-overlay" @click.self="detailHomework = null">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>{{ detailHomework.homework_name }}</h3>
+          <span class="modal-close" @click="detailHomework = null">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="detail-row"><span class="label">所属课程</span><span class="value">{{ detailHomework.course_name }}</span></div>
+          <div class="detail-row"><span class="label">作业描述</span><span class="value">{{ detailHomework.description || '暂无描述' }}</span></div>
+          <div class="detail-row"><span class="label">截止时间</span><span class="value">{{ formatDate(detailHomework.deadline) }}</span></div>
+          <div class="detail-row"><span class="label">状态</span><span class="value"><span :class="'status-tag status-' + detailHomework.status">{{ statusMap[detailHomework.status] || detailHomework.status }}</span></span></div>
+          <div class="detail-row"><span class="label">提交状态</span><span class="value"><span :class="'status-tag status-' + detailHomework.submit_status">{{ submitStatusMap[detailHomework.submit_status] || detailHomework.submit_status }}</span></span></div>
+          <div class="detail-row" v-if="detailHomework.score"><span class="label">得分</span><span class="value">{{ detailHomework.score }}</span></div>
+          <div style="margin-top:16px;display:flex;gap:8px;">
+            <el-button v-if="detailHomework.status === 'pending' || detailHomework.status === 'in_progress'" type="primary" size="small" @click="markHomeworkComplete(detailHomework.id)">标记为已完成</el-button>
+            <el-button v-if="detailHomework.status === 'pending' || detailHomework.status === 'in_progress'" type="warning" size="small" @click="markHomeworkOverdue(detailHomework.id)">标记为已逾期</el-button>
+            <el-button size="small" @click="detailHomework = null">关闭</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 考试详情弹窗 -->
+    <div v-if="detailExam" class="modal-overlay" @click.self="detailExam = null">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>{{ detailExam.exam_name }}</h3>
+          <span class="modal-close" @click="detailExam = null">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="detail-row"><span class="label">所属课程</span><span class="value">{{ detailExam.course_name }}</span></div>
+          <div class="detail-row"><span class="label">考试描述</span><span class="value">{{ detailExam.description || '暂无描述' }}</span></div>
+          <div class="detail-row"><span class="label">开始时间</span><span class="value">{{ formatDateTime(detailExam.start_time) }}</span></div>
+          <div class="detail-row"><span class="label">结束时间</span><span class="value">{{ formatDateTime(detailExam.end_time) }}</span></div>
+          <div class="detail-row"><span class="label">考试时长</span><span class="value">{{ detailExam.duration }} 分钟</span></div>
+          <div class="detail-row"><span class="label">考试地点</span><span class="value">{{ detailExam.location || '未指定' }}</span></div>
+          <div class="detail-row"><span class="label">考试形式</span><span class="value">{{ detailExam.exam_format || '未指定' }}</span></div>
+          <div class="detail-row"><span class="label">状态</span><span class="value"><span :class="'status-tag status-' + detailExam.status">{{ statusMap[detailExam.status] || detailExam.status }}</span></span></div>
+          <div style="margin-top:16px;display:flex;gap:8px;">
+            <el-button v-if="detailExam.status === 'pending'" type="primary" size="small" @click="markExamComplete(detailExam.id)">标记为已完成</el-button>
+            <el-button v-if="detailExam.status === 'pending'" type="warning" size="small" @click="markExamOverdue(detailExam.id)">标记为已逾期</el-button>
+            <el-button size="small" @click="detailExam = null">关闭</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/element-plus@2.9.1/dist/index.full.min.js"></script>
+  <script>
+    const { createApp, ref, computed, onMounted, watch, nextTick, toRaw } = Vue;
+
+    // 将 Vue Proxy 对象转为普通对象，用于 IPC 传递
+    function plain(obj) {
+      if (obj === null || obj === undefined) return obj;
+      if (typeof obj !== 'object') return obj;
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    const app = createApp({
+      setup() {
+        // ===== 状态 =====
+        const loggedIn = ref(false);
+        const loading = ref(false);
+        const loginLoading = ref(false);
+        const loginError = ref('');
+        const loginForm = ref({ username: 'local', password: '123456' });
+        const currentPage = ref('home');
+        const currentUser = ref(null);
+
+        // 数据
+        const allHomeworks = ref([]);
+        const allExams = ref([]);
+        const allCourses = ref([]);
+        const stats = ref({ totalHomework: 0, totalExam: 0, pendingHomework: 0, pendingExam: 0, overdueHomework: 0, thisWeekTasks: 0 });
+
+        // 筛选
+        const homeworkFilter = ref('all');
+        const examFilter = ref('all');
+
+        // 弹窗
+        const detailHomework = ref(null);
+        const detailExam = ref(null);
+
+        // Toast
+        const toasts = ref([]);
+
+        // 设置
+        const settings = ref({ remindHomework1Day: true, remindHomework6Hour: true, remindHomework1Hour: false, remindExam1Day: true, remindExam3Hour: true, remindExam1Hour: false, sync_frequency: 'manual', theme: 'light', reminder_methods: ['app'] });
+        const savingSettings = ref(false);
+
+        // 个人中心
+        const profileForm = ref({ username: '', name: '', email: '', phone: '' });
+        const savingProfile = ref(false);
+
+        // 同步
+        const syncing = ref(false);
+        const showExportMenu = ref(false);
+        const chaoxingStatus = ref({ loggedIn: false, lastSync: null, cookie: '' });
+        const syncMessage = ref('');
+        const syncSuccess = ref(false);
+
+        // 日历
+        const calendarMonth = ref(new Date().getMonth());
+        const calendarYear = ref(new Date().getFullYear());
+
+        // ===== 计算属性 =====
+        const userInitial = computed(() => currentUser.value?.name?.charAt(0) || '?');
+        const currentUserName = computed(() => currentUser.value?.name || '用户');
+
+        const navItems = computed(() => [
+          { key: 'home', label: '概览', icon: '&#128202;', badge: 0 },
+          { key: 'homework', label: '作业管理', icon: '&#128203;', badge: stats.value.overdueHomework + stats.value.pendingHomework },
+          { key: 'exam', label: '考试管理', icon: '&#128218;', badge: stats.value.pendingExam },
+          { key: 'calendar', label: '日历视图', icon: '&#128197;', badge: 0 },
+          { key: 'reminder', label: '提醒设置', icon: '&#128276;', badge: 0 },
+          { key: 'profile', label: '个人中心', icon: '&#128100;', badge: 0 }
+        ]);
+
+        const recentHomeworks = computed(() => allHomeworks.value.filter(h => h.status !== 'completed').sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 5));
+        const upcomingExams = computed(() => allExams.value.filter(e => e.status === 'pending').sort((a, b) => new Date(a.start_time) - new Date(b.start_time)).slice(0, 5));
+
+        const filteredHomeworks = computed(() => {
+          if (homeworkFilter.value === 'all') return [...allHomeworks.value].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+          return allHomeworks.value.filter(h => h.status === homeworkFilter.value).sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        });
+        const filteredExams = computed(() => {
+          if (examFilter.value === 'all') return [...allExams.value].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+          return allExams.value.filter(e => e.status === examFilter.value).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+        });
+
+        const statusMap = { pending: '待处理', in_progress: '进行中', completed: '已完成', overdue: '已逾期', peer_review: '待互评', not_submitted: '未提交', submitted: '已提交' };
+        const submitStatusMap = { not_submitted: '未提交', submitted: '已提交' };
+
+        // ===== 日历 =====
+        const calendarTitle = computed(() => `${calendarYear.value}年${calendarMonth.value + 1}月`);
+        const calendarDays = computed(() => {
+          const year = calendarYear.value;
+          const month = calendarMonth.value;
+          const firstDay = new Date(year, month, 1);
+          const lastDay = new Date(year, month + 1, 0);
+          const startPad = firstDay.getDay();
+          const days = [];
+
+          // 上月补齐
+          const prevLastDay = new Date(year, month, 0).getDate();
+          for (let i = startPad - 1; i >= 0; i--) {
+            const d = prevLastDay - i;
+            const date = new Date(year, month - 1, d);
+            days.push({ day: d, date, isCurrentMonth: false, isToday: false, events: getEventsForDate(date) });
+          }
+          // 本月
+          for (let d = 1; d <= lastDay.getDate(); d++) {
+            const date = new Date(year, month, d);
+            const today = new Date();
+            days.push({ day: d, date, isCurrentMonth: true, isToday: date.toDateString() === today.toDateString(), events: getEventsForDate(date) });
+          }
+          // 下月补齐
+          const remaining = 42 - days.length;
+          for (let d = 1; d <= remaining; d++) {
+            const date = new Date(year, month + 1, d);
+            days.push({ day: d, date, isCurrentMonth: false, isToday: false, events: getEventsForDate(date) });
+          }
+          return days;
+        });
+
+        function getEventsForDate(date) {
+          const events = [];
+          const dateStr = formatDate(date.toISOString());
+          
+          allHomeworks.value.forEach(hw => {
+            // 从 deadline 匹配
+            let hwDate = hw.deadline ? formatDate(hw.deadline) : '';
+            // 从 left_time 中提取日期（如"剩余280小时37分钟"不包含日期，跳过）
+            // 从 ariaLabel 中提取日期
+            if (!hwDate && hw.ariaLabel) {
+              const dateMatch = hw.ariaLabel.match(/(\d{4}-\d{2}-\d{2})/);
+              if (dateMatch) hwDate = dateMatch[1];
+            }
+            // 从 title 中提取日期（如"试卷20260430103829"）
+            if (!hwDate && hw.homework_name) {
+              const titleDate = hw.homework_name.match(/(\d{4})(\d{2})(\d{2})/);
+              if (titleDate) hwDate = `${titleDate[1]}-${titleDate[2]}-${titleDate[3]}`;
+            }
+            
+            if (hwDate === dateStr) {
+              const course = hw.course_name || '未知课程';
+              const statusText = statusMap[hw.status] || hw.status;
+              events.push({
+                id: hw.id,
+                type: 'homework',
+                status: hw.status,
+                title: hw.homework_name,
+                fullTitle: `${hw.homework_name} (${course}) - ${statusText}`,
+                ...hw
+              });
+            }
+          });
+          
+          allExams.value.forEach(exam => {
+            // 从 end_time 匹配
+            let examDate = exam.end_time ? formatDate(exam.end_time) : '';
+            // 从 start_time 匹配
+            if (!examDate && exam.start_time) {
+              examDate = formatDate(exam.start_time);
+            }
+            // 从 title 中提取日期
+            if (!examDate && exam.exam_name) {
+              const titleDate = exam.exam_name.match(/(\d{4})(\d{2})(\d{2})/);
+              if (titleDate) examDate = `${titleDate[1]}-${titleDate[2]}-${titleDate[3]}`;
+            }
+            
+            if (examDate === dateStr) {
+              const course = exam.course_name || '未知课程';
+              const statusText = statusMap[exam.status] || exam.status;
+              events.push({
+                id: exam.id,
+                type: 'exam',
+                status: exam.status,
+                title: exam.exam_name,
+                fullTitle: `${exam.exam_name} (${course}) - ${statusText}`,
+                ...exam
+              });
+            }
+          });
+          
+          return events;
+        }
+
+        // ===== 工具函数 =====
+        function formatDate(dateStr) {
+          if (!dateStr) return '';
+          // 处理各种日期格式
+          let d;
+          // 尝试标准格式
+          if (/^\d{4}-\d{1,2}-\d{1,2}/.test(dateStr)) {
+            // 替换为ISO格式确保兼容
+            const normalized = dateStr.replace(/(\d{4}-\d{1,2}-\d{1,2})\s+(\d{1,2}:\d{1,2})/, '$1T$2:00');
+            d = new Date(normalized);
+          } else {
+            d = new Date(dateStr);
+          }
+          if (isNaN(d.getTime())) {
+            // 无法解析，返回原始字符串
+            return dateStr;
+          }
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        function formatDateTime(dateStr) {
+          if (!dateStr) return '';
+          let d;
+          if (/^\d{4}-\d{1,2}-\d{1,2}/.test(dateStr)) {
+            const normalized = dateStr.replace(/(\d{4}-\d{1,2}-\d{1,2})\s+(\d{1,2}:\d{1,2})/, '$1T$2:00');
+            d = new Date(normalized);
+          } else {
+            d = new Date(dateStr);
+          }
+          if (isNaN(d.getTime())) {
+            return dateStr;
+          }
+          return `${formatDate(dateStr)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function showToast(message, type = 'info') {
+          toasts.value.push({ message, type });
+          setTimeout(() => { toasts.value.shift(); }, 3000);
+        }
+
+        function filteredHomeworksByStatus(status) {
+          return allHomeworks.value.filter(h => h.status === status);
+        }
+        function filteredExamsByStatus(status) {
+          return allExams.value.filter(e => e.status === status);
+        }
+
+        // ===== 业务逻辑 =====
+        async function handleLogin() {
+          loginLoading.value = true;
+          loginError.value = '';
+          try {
+            // 检查 API 是否可用
+            if (!window.api) {
+              loginError.value = 'API未加载，请检查preload配置';
+              console.error('[Login] window.api is undefined');
+              loginLoading.value = false;
+              return;
+            }
+            if (typeof window.api.login !== 'function') {
+              loginError.value = '登录接口不可用';
+              console.error('[Login] window.api.login is not a function');
+              loginLoading.value = false;
+              return;
+            }
+            const res = await window.api.login(plain(loginForm.value));
+            if (res.success) {
+              currentUser.value = res.user;
+              profileForm.value = { username: res.user.username, name: res.user.name, email: res.user.email || '', phone: res.user.phone || '' };
+              loggedIn.value = true;
+              showToast('登录成功', 'success');
+              await loadAllData();
+            } else {
+              loginError.value = res.message || '登录失败';
+            }
+          } catch (e) {
+            console.error('[Login] Error:', e.message || e);
+            loginError.value = '登录出错：' + (e.message || '未知错误');
+          } finally {
+            loginLoading.value = false;
+          }
+        }
+
+        function handleLogout() {
+          loggedIn.value = false;
+          currentUser.value = null;
+          allHomeworks.value = [];
+          allExams.value = [];
+          showToast('已退出登录', 'info');
+        }
+
+        async function loadAllData() {
+          loading.value = true;
+          try {
+            const [hwRes, examRes, courseRes, statsRes] = await Promise.all([
+              window.api.getHomeworks(),
+              window.api.getExams(),
+              window.api.getCourses(),
+              window.api.getStats()
+            ]);
+            if (hwRes.success) allHomeworks.value = hwRes.data;
+            if (examRes.success) allExams.value = examRes.data;
+            if (courseRes.success) allCourses.value = courseRes.data;
+            if (statsRes.success) stats.value = statsRes.data;
+          } catch (e) {
+            showToast('加载数据失败', 'error');
+          } finally {
+            loading.value = false;
+          }
+        }
+
+        async function syncData() {
+          syncing.value = true;
+          syncMessage.value = '';
+          try {
+            const res = await window.api.syncData();
+            if (res.success) {
+              syncMessage.value = res.message || `同步完成：${res.homeworkCount || 0}项作业，${res.examCount || 0}场考试`;
+              syncSuccess.value = true;
+              showToast(syncMessage.value, 'success');
+              await loadAllData();
+              await loadChaoxingStatus();
+            } else {
+              syncMessage.value = res.message || '同步失败';
+              syncSuccess.value = false;
+              showToast(syncMessage.value, 'error');
+            }
+          } catch (e) {
+            syncMessage.value = '同步出错：' + (e.message || '未知错误');
+            syncSuccess.value = false;
+            showToast(syncMessage.value, 'error');
+          } finally {
+            syncing.value = false;
+          }
+        }
+
+        async function openChaoxingLogin() {
+          try {
+            await window.api.openChaoxingLogin();
+            showToast('已打开学习通登录窗口，请在新窗口中完成登录', 'info');
+          } catch (e) {
+            showToast('打开登录窗口失败', 'error');
+          }
+        }
+
+        async function chaoxingLogout() {
+          try {
+            await window.api.chaoxingLogout();
+            chaoxingStatus.value = { loggedIn: false, lastSync: null, cookie: '' };
+            showToast('已断开学习通连接', 'info');
+          } catch (e) {
+            showToast('操作失败', 'error');
+          }
+        }
+
+        async function loadChaoxingStatus() {
+          try {
+            const res = await window.api.getChaoxingStatus();
+            if (res.success) {
+              chaoxingStatus.value = res.data;
+            }
+          } catch (e) {
+            console.error('获取学习通状态失败', e);
+          }
+        }
+
+        // 监听学习通登录成功事件
+        function setupChaoxingListener() {
+          if (window.api.onChaoxingLoginSuccess) {
+            window.api.onChaoxingLoginSuccess((data) => {
+              if (data.loggedIn) {
+                chaoxingStatus.value.loggedIn = true;
+                chaoxingStatus.value.cookie = '***';
+                showToast('学习通登录成功！点击"同步数据"获取作业和考试', 'success');
+              }
+            });
+          }
+        }
+
+        async function saveSettings() {
+          savingSettings.value = true;
+          try {
+            const settingData = {
+              sync_frequency: settings.value.sync_frequency,
+              theme: settings.value.theme,
+              homework_reminder_times: [],
+              exam_reminder_times: [],
+              reminder_methods: settings.value.reminder_methods
+            };
+            if (settings.value.remindHomework1Day) settingData.homework_reminder_times.push('1day');
+            if (settings.value.remindHomework6Hour) settingData.homework_reminder_times.push('6hour');
+            if (settings.value.remindHomework1Hour) settingData.homework_reminder_times.push('1hour');
+            if (settings.value.remindExam1Day) settingData.exam_reminder_times.push('1day');
+            if (settings.value.remindExam3Hour) settingData.exam_reminder_times.push('3hour');
+            if (settings.value.remindExam1Hour) settingData.exam_reminder_times.push('1hour');
+
+            const res = await window.api.updateSettings(plain(settingData));
+            if (res.success) showToast('设置已保存', 'success');
+          } catch (e) {
+            showToast('保存设置失败', 'error');
+          } finally {
+            savingSettings.value = false;
+          }
+        }
+
+        async function loadSettings() {
+          try {
+            const res = await window.api.getSettings();
+            if (res.success) {
+              const s = res.data;
+              settings.value.remindHomework1Day = s.homework_reminder_times.includes('1day');
+              settings.value.remindHomework6Hour = s.homework_reminder_times.includes('6hour');
+              settings.value.remindHomework1Hour = s.homework_reminder_times.includes('1hour');
+              settings.value.remindExam1Day = s.exam_reminder_times.includes('1day');
+              settings.value.remindExam3Hour = s.exam_reminder_times.includes('3hour');
+              settings.value.remindExam1Hour = s.exam_reminder_times.includes('1hour');
+              settings.value.sync_frequency = s.sync_frequency || 'manual';
+              settings.value.theme = s.theme || 'light';
+              settings.value.reminder_methods = s.reminder_methods || ['app'];
+            }
+          } catch (e) {
+            console.error('加载设置失败', e);
+          }
+        }
+
+        async function updateProfile() {
+          savingProfile.value = true;
+          try {
+            const res = await window.api.updateUserProfile(plain(profileForm.value));
+            if (res.success) {
+              currentUser.value.name = profileForm.value.name;
+              showToast('个人信息已更新', 'success');
+            }
+          } catch (e) {
+            showToast('更新失败', 'error');
+          } finally {
+            savingProfile.value = false;
+          }
+        }
+
+        async function showHomeworkDetail(hw) {
+          try {
+            const res = await window.api.getHomeworkDetail(hw.id);
+            if (res.success) detailHomework.value = res.data;
+          } catch (e) {
+            detailHomework.value = hw;
+          }
+        }
+
+        async function showExamDetail(exam) {
+          try {
+            const res = await window.api.getExamDetail(exam.id);
+            if (res.success) detailExam.value = res.data;
+          } catch (e) {
+            detailExam.value = exam;
+          }
+        }
+
+        async function markHomeworkComplete(id) {
+          try {
+            const res = await window.api.updateHomeworkStatus({ id, status: 'completed' });
+            if (res.success) {
+              showToast('作业已标记为完成', 'success');
+              detailHomework.value = null;
+              await loadAllData();
+            }
+          } catch (e) {
+            showToast('操作失败', 'error');
+          }
+        }
+
+        async function markHomeworkOverdue(id) {
+          try {
+            const res = await window.api.updateHomeworkStatus({ id, status: 'overdue' });
+            if (res.success) {
+              showToast('作业已标记为已逾期', 'success');
+              detailHomework.value = null;
+              await loadAllData();
+            }
+          } catch (e) {
+            showToast('操作失败', 'error');
+          }
+        }
+
+        async function markExamComplete(id) {
+          try {
+            const res = await window.api.updateExamStatus({ id, status: 'completed' });
+            if (res.success) {
+              showToast('考试已标记为完成', 'success');
+              detailExam.value = null;
+              await loadAllData();
+            }
+          } catch (e) {
+            showToast('操作失败', 'error');
+          }
+        }
+
+        async function markExamOverdue(id) {
+          try {
+            const res = await window.api.updateExamStatus({ id, status: 'overdue' });
+            if (res.success) {
+              showToast('考试已标记为已逾期', 'success');
+              detailExam.value = null;
+              await loadAllData();
+            }
+          } catch (e) {
+            showToast('操作失败', 'error');
+          }
+        }
+
+        function calendarToday() {
+          const now = new Date();
+          calendarYear.value = now.getFullYear();
+          calendarMonth.value = now.getMonth();
+        }
+
+        async function exportData(format) {
+          showExportMenu.value = false;
+          try {
+            const res = await window.api.exportData(format);
+            if (res.success) {
+              if (format === 'json') {
+                const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `学习通数据导出_${formatDate(new Date())}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('JSON数据已导出', 'success');
+              } else {
+                let text = '=== 学习通作业考试管理助手 数据导出 ===\n\n';
+                text += `导出时间：${res.data.exportTime}\n\n`;
+                text += `课程总数：${res.data.summary.courseCount}\n`;
+                text += `作业总数：${res.data.summary.homeworkCount}\n`;
+                text += `考试总数：${res.data.summary.examCount}\n\n--- 课程列表 ---\n`;
+                res.data.courses.forEach(c => { text += `${c.course_name} (${c.teacher})\n`; });
+                text += '\n--- 作业列表 ---\n';
+                res.data.homeworks.forEach(h => { text += `${h.course} - ${h.homework_name} [${statusMap[h.status] || h.status}] 截止:${h.deadline}\n`; });
+                text += '\n--- 考试列表 ---\n';
+                res.data.exams.forEach(e => { text += `${e.course} - ${e.exam_name} [${statusMap[e.status] || e.status}] ${e.start_time} ${e.location || ''}\n`; });
+
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `学习通数据导出_${formatDate(new Date())}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('文本数据已导出', 'success');
+              }
+            }
+          } catch (e) {
+            showToast('导出失败', 'error');
+          }
+        }
+
+        function navigateTo(page) {
+          currentPage.value = page;
+          if (page === 'reminder') loadSettings();
+          if (page === 'profile') {
+            loadChaoxingStatus();
+            if (currentUser.value) {
+              profileForm.value = { username: currentUser.value.username, name: currentUser.value.name, email: currentUser.value.email || '', phone: currentUser.value.phone || '' };
+            }
+          }
+          if (page === 'home') loadAllData();
+        }
+
+        // ===== 挂载 =====
+        onMounted(() => {
+          setupChaoxingListener();
+          if (currentUser.value) loadAllData();
+        });
+
+        return {
+          loggedIn, loading, loginLoading, loginError, loginForm, currentPage, currentUser, userInitial, currentUserName,
+          navItems, stats, allHomeworks: allHomeworks, allExams, allCourses, recentHomeworks, upcomingExams,
+          homeworkFilter, examFilter, filteredHomeworks, filteredExams, filteredHomeworksByStatus, filteredExamsByStatus,
+          statusMap, submitStatusMap, detailHomework, detailExam, toasts,
+          settings, savingSettings, profileForm, savingProfile, syncing, showExportMenu,
+          chaoxingStatus, syncMessage, syncSuccess,
+          calendarMonth, calendarYear, calendarTitle, calendarDays, calendarToday,
+          handleLogin, handleLogout, navigateTo, loadAllData, syncData, saveSettings, updateProfile,
+          showHomeworkDetail, showExamDetail, markHomeworkComplete, markHomeworkOverdue, markExamComplete, markExamOverdue,
+          exportData, formatDate, formatDateTime, showToast,
+          openChaoxingLogin, chaoxingLogout, loadChaoxingStatus
+        };
+      }
+    });
+
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>

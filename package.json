@@ -1,0 +1,46 @@
+{
+  "name": "learnpass-assistant",
+  "version": "1.0.0",
+  "description": "学习通作业考试管理助手",
+  "main": "main.js",
+  "scripts": {
+    "start": "npx electron .",
+    "build": "npx electron-builder --win --x64",
+    "dev": "npx electron ."
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.learnpass.assistant",
+    "productName": "学习通作业考试管理助手",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "chaoxing-api.js",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": null,
+      "signingHashAlgorithms": ["sha256"],
+      "sign": null
+    },
+    "portable": {
+      "artifactName": "${productName}.exe"
+    }
+  }
+}
