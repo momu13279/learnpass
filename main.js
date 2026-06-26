@@ -86,7 +86,7 @@ function createWindow() {
     height: 800,
     minWidth: 1024,
     minHeight: 768,
-    title: '学习通作业考试管理助手',
+    title: 'LearnPass 学习通助手',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,

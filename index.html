@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>学习通作业考试管理助手</title>
+  <title>LearnPass 学习通助手</title>
   <link rel="stylesheet" href="https://unpkg.com/element-plus@2.9.1/dist/index.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -179,7 +179,7 @@
     <!-- 登录页 -->
     <div v-if="!loggedIn" class="login-page">
       <div class="login-card">
-        <h2>学习通作业考试管理助手</h2>
+        <h2>LearnPass 学习通助手</h2>
         <p class="subtitle">统一管理你的学习任务与考试安排</p>
         <el-form :model="loginForm" @submit.prevent="handleLogin">
           <el-form-item>
@@ -1076,7 +1076,7 @@
                 URL.revokeObjectURL(url);
                 showToast('JSON数据已导出', 'success');
               } else {
-                let text = '=== 学习通作业考试管理助手 数据导出 ===\n\n';
+                let text = '=== LearnPass 学习通助手 数据导出 ===\n\n';
                 text += `导出时间：${res.data.exportTime}\n\n`;
                 text += `课程总数：${res.data.summary.courseCount}\n`;
                 text += `作业总数：${res.data.summary.homeworkCount}\n`;

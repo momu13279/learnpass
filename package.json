@@ -1,7 +1,7 @@
 {
   "name": "learnpass-assistant",
   "version": "1.0.0",
-  "description": "学习通作业考试管理助手",
+  "description": "LearnPass 学习通助手",
   "main": "main.js",
   "scripts": {
     "start": "npx electron .",
@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.learnpass.assistant",
-    "productName": "学习通作业考试管理助手",
+    "productName": "LearnPass 学习通助手",
     "directories": {
       "output": "dist"
     },
